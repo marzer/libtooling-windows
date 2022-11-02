@@ -1,2 +1,16 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+*                   text        eol=lf      encoding=UTF-8
+*.h                 text        eol=lf      encoding=UTF-8      linguist-language=C
+*.hh                text        eol=lf      encoding=UTF-8      linguist-language=C++
+*.hpp               text        eol=lf      encoding=UTF-8      linguist-language=C++
+
+include/*           linguist-vendored
+lib/*               linguist-vendored
+
+*.lib               binary
+*.so                binary
+*.dylib             binary
+*.dll               binary
+*.lai               binary
+*.la                binary
+*.a                 binary
+*.lib               binary
