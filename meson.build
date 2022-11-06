@@ -16,6 +16,9 @@ subdir('lib')
 
 libtooling_windows_dep = declare_dependency(
 	dependencies: libs,
-	include_directories: include_directories('include')
+	include_directories: [
+		include_directories('include'),
+		is_x64 ? include_directories('include/win64') : include_directories('include/win32')
+	]
 )
 meson.override_dependency(meson.project_name(), libtooling_windows_dep)

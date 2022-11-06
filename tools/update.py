@@ -21,8 +21,10 @@ def main():
 	if args.build64 is None:
 		args.build64 = args.llvm / r'build64'
 
-	llvm = args.llvm
-	llvm: Path
+	root = args.llvm
+	root: Path
+	llvm = root / r'llvm'
+	clang = root / r'clang'
 	build32 = args.build32
 	build32: Path
 	build64 = args.build64
@@ -34,29 +36,39 @@ def main():
 		(64, build64, r'Debug'),
 		(64, build64, r'Release'),
 	)
+	junk = shutil.ignore_patterns(
+		r'*.td', r'*.vcxproj', r'CMakeLists.txt', r'*.filters', r'*.cmake', r'*.stamp', r'*.depend', r'*.log',
+		r'*.recipe', r'*.tlog', r'*.FileListAbsolute.txt', r'*.in', r'*.modulemap', r'.clang-format', r'*.build'
+	)
 
-	assert_existing_directory(llvm)
-	assert_existing_directory(llvm / r'llvm/include')
-	assert_existing_directory(llvm / r'clang/include')
+	assert_existing_directory(llvm / r'include')
+	assert_existing_directory(clang / r'include')
 	for _, build, mode in configurations:
 		assert_existing_directory(build / mode / r'lib')
 
 	print(r'Creating output directories')
 	delete_directory(out / r'include')
 	delete_directory(out / r'lib')
-	os.makedirs(out / r'include/llvm', exist_ok=True)
-	os.makedirs(out / r'include/clang', exist_ok=True)
 	for bits, _, mode in configurations:
 		os.makedirs(out / rf'lib/win{bits}-{mode}', exist_ok=True)
 
 	print(r'Copying includes')
 	includes = [
-		(llvm / r'llvm/include/llvm/ADT', out / r'include/llvm/ADT'),  #
-		(llvm / r'clang/include/clang/Tooling', out / r'include/clang/Tooling')
+		# llvm
+		(llvm / r'include/llvm', r'llvm'),
+		(llvm / r'include/llvm-c', r'llvm-c'),
+		# clang
+		(clang / r'include/clang', r'clang'),
+		(clang / r'include/clang-c', r'clang-c'),
+		# generated files
+		(build32 / r'include/llvm', r'win32/llvm'),
+		(build64 / r'include/llvm', r'win64/llvm'),
+		(build32 / r'tools/clang/include/clang', r'win32/clang'),
+		(build64 / r'tools/clang/include/clang', r'win64/clang'),
 	]
-	for src, dest in includes:
-		shutil.copytree(src, dest, dirs_exist_ok=True)
-	copy_file(llvm / r'LICENSE.txt', out / r'include')
+	for source, dest in includes:
+		print(rf'	{source} => {dest}')
+		shutil.copytree(source, out / r'include' / dest, dirs_exist_ok=True, ignore=junk)
 
 	print(r'Copying libs')
 	libs = [
@@ -64,7 +76,10 @@ def main():
 	]
 	for bits, build, mode in configurations:
 		for lib in libs:
-			copy_file(build / mode / rf'lib/{lib}.lib', out / rf'lib/win{bits}-{mode}')
+			source = build / mode / rf'lib/{lib}.lib'
+			dest = rf'lib/win{bits}-{mode}'
+			print(rf'	{source} => {dest}')
+			copy_file(source, out / dest)
 
 	print(r'Writing build scripts')
 
