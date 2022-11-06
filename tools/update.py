@@ -69,6 +69,7 @@ def main():
 	for source, dest in includes:
 		print(rf'	{source} => {dest}')
 		shutil.copytree(source, out / r'include' / dest, dirs_exist_ok=True, ignore=junk)
+	copy_file(root / r'LICENSE.txt', out / r'include')
 
 	print(r'Copying libs')
 	libs = [
