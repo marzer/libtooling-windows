@@ -3,5 +3,19 @@
 #-----------------------------------------------------------------------------------------------------------------------
 
 libs += [
-	cpp.find_library('clangTooling', dirs : [meson.current_source_dir()], required : true, static : true)
+	cpp.find_library('LLVMBinaryFormat', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('LLVMBitReader', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('LLVMBitstreamReader', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('LLVMCore', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('LLVMFrontendOpenMP', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('LLVMRemarks', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('LLVMSupport', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('clangAST', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('clangBasic', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('clangFrontend', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('clangLex', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('clangParse', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('clangSupport', dirs : [meson.current_source_dir()], required : true, static : true),
+	cpp.find_library('clangTooling', dirs : [meson.current_source_dir()], required : true, static : true),
+
 ]
