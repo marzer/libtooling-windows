@@ -71,6 +71,10 @@ def main():
 	with open(out / r'LLVM_COMMIT', r'w', encoding=r'utf-8', newline='\n') as f:
 		print(git_query("rev-parse HEAD", cwd=root), file=f)
 
+	def relative_to_llvm_root(s):
+		nonlocal root
+		return str(s).replace(str(root), "").strip("\\/").replace("\\", "/")
+
 	print(r'Copying includes')
 	includes = [
 		# llvm
@@ -85,22 +89,20 @@ def main():
 		(build32 / r'tools/clang/include/clang', r'win32/clang'),
 		(build64 / r'tools/clang/include/clang', r'win64/clang'),
 	]
+	includes = sorted(includes, key=lambda v: v[1])
 	for source, dest in includes:
-		print(rf'	{source} => {dest}')
+		print(rf'  {relative_to_llvm_root(source)} => {dest}')
 		shutil.copytree(source, out / r'include' / dest, dirs_exist_ok=True, ignore=junk)
 	copy_file(root / r'LICENSE.txt', out / r'include')
 
 	print(r'Copying libs')
-	libs = [  #
-		*[rf'LLVM{lib}' for lib in (r'BinaryFormat', r'BitReader', r'BitstreamReader', r'Core', r'FrontendOpenMP', r'Remarks', r'Support')],
-		*[rf'clang{lib}' for lib in (r'AST', r'Basic', r'Frontend', r'Lex', r'Parse', r'Support', r'Tooling')]
-	]
 	for bits, build, mode in configurations:
-		for lib in libs:
-			source = build / mode / rf'lib/{lib}.lib'
-			dest = rf'lib/win{bits}-{mode}'
-			print(rf'	{source} => {dest}')
-			copy_file(source, out / dest)
+		#for lib in libs:
+		dest = rf'lib/win{bits}-{mode}'
+		print(rf'  {dest}')
+		for lib in enumerate_files(build / mode / rf'lib', any="*.lib", recursive=False):
+			print(rf'    {relative_to_llvm_root(lib)}')
+			copy_file(lib, out / dest)
 
 	print(r'Writing build scripts')
 	script_preamble = rf'''
@@ -128,10 +130,11 @@ def main():
 			'''.strip().replace("\t\t\t", "") + '\n'
 		)
 	for bits, build, mode in configurations:
+		libs = enumerate_files(out / rf'lib/win{bits}-{mode}', any="*.lib", recursive=False)
 		with open(out / rf'lib/win{bits}-{mode}/meson.build', r'w', encoding=r'utf-8', newline='\n') as f:
 			find_library = r''
 			for lib in libs:
-				find_library += f'''\tcpp.find_library('{lib}', dirs : [meson.current_source_dir()], required : true, static : true),\n'''
+				find_library += f'''\tcpp.find_library('{lib.stem}', dirs : [meson.current_source_dir()], required : true, static : true),\n'''
 			f.write(
 				rf'''
 				{script_preamble}
